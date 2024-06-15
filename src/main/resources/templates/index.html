@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Spring Boot WebSocket Chat</title>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div>
+    <input type="text" id="sender" placeholder="Your name"/>
+    <input type="text" id="receiver" placeholder="Receiver name"/>
+    <input type="text" id="message" placeholder="Type a message..."/>
+    <button onclick="sendMessage()">Send</button>
+</div>
+<div id="messages"></div>
+<script type="text/javascript">
+    var stompClient = null;
+    var username = null;
+
+    function connect() {
+        username = prompt("Enter your name:", "");
+        if (!username) {
+            return;
+        }
+
+        var socket = new SockJS('/chat-websocket');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('/user/' + username + '/queue/messages', function (message) {
+                showMessage(JSON.parse(message.body));
+            });
+        });
+    }
+
+    function sendMessage() {
+        var messageContent = $('#message').val();
+        var receiver = $('#receiver').val();
+        if (messageContent && receiver && stompClient) {
+            var chatMessage = {
+                content: messageContent,
+                sender: username,
+                receiver: receiver
+            };
+            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+            $('#message').val('');
+        }
+    }
+
+    function showMessage(message) {
+        $('#messages').append('<div><strong>' + message.sender + ':</strong> ' + message.content + '</div>');
+    }
+
+    $(document).ready(function() {
+        connect();
+    });
+</script>
+</body>
+</html>
