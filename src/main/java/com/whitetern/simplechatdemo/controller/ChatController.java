@@ -3,7 +3,6 @@ package com.whitetern.simplechatdemo.controller;
 import com.whitetern.simplechatdemo.entity.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.util.HtmlUtils;
@@ -20,10 +19,7 @@ public class ChatController {
         String sender = HtmlUtils.htmlEscape(message.getSender());
         String receiver = HtmlUtils.htmlEscape(message.getReceiver());
 
-        ChatMessage msg = new ChatMessage();
-        msg.setContent(content);
-        msg.setSender(sender);
-        msg.setReceiver(receiver);
+        ChatMessage msg = new ChatMessage(content, sender, receiver);
 
         messagingTemplate.convertAndSendToUser(receiver, "/queue/messages", msg);
     }
